@@ -589,6 +589,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **🌸 Made with ❤️ for English Learners Worldwide 🌸**
 
-[🌟 Star this repo](https://github.com/your-username/ManabiFun) | [🐛 Report Bug](https://github.com/your-username/ManabiFun/issues) | [💡 Request Feature](https://github.com/your-username/ManabiFun/issues)
+[🌟 Star this repo](https://github.com/chsriv/ManabiFun) | [🐛 Report Bug](https://github.com/chsriv/ManabiFun/issues) | [💡 Request Feature](https://github.com/chsriv/ManabiFun/issues)
 
 </div>
