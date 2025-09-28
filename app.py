@@ -262,6 +262,152 @@ def predict_weakness(scores_row):
         print(f"⚠️ Prediction error: {e}")
         return 0, TOPICS[0]
 
+def update_user_progress(realm_key, difficulty, score, total_questions):
+    """Update comprehensive user progress tracking"""
+    percentage = (score / total_questions) * 100 if total_questions > 0 else 0
+    
+    # Initialize realm progress if not exists
+    if realm_key not in st.session_state.player_progress['completed_chapters']:
+        st.session_state.player_progress['completed_chapters'][realm_key] = {}
+    
+    # Update chapter progress
+    st.session_state.player_progress['completed_chapters'][realm_key][difficulty] = {
+        'score': score,
+        'total': total_questions,
+        'percentage': percentage,
+        'attempts': st.session_state.player_progress['completed_chapters'][realm_key].get(difficulty, {}).get('attempts', 0) + 1,
+        'date': datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    
+    # Update global stats
+    st.session_state.player_progress['total_questions'] += total_questions
+    st.session_state.player_progress['total_correct'] += score
+    
+    # Track learning path
+    chapter_key = f"{realm_key}_{difficulty}"
+    if chapter_key not in st.session_state.player_progress['learning_path']:
+        st.session_state.player_progress['learning_path'].append(chapter_key)
+    
+    # Calculate realm mastery
+    realm_scores = []
+    for diff_data in st.session_state.player_progress['completed_chapters'][realm_key].values():
+        realm_scores.append(diff_data['percentage'])
+    st.session_state.player_progress['realm_mastery'][realm_key] = sum(realm_scores) / len(realm_scores)
+    
+    # Update weak/strong areas
+    if percentage < 60:
+        if realm_key not in st.session_state.player_progress['weak_areas']:
+            st.session_state.player_progress['weak_areas'].append(realm_key)
+    elif percentage >= 85:
+        if realm_key not in st.session_state.player_progress['strong_areas']:
+            st.session_state.player_progress['strong_areas'].append(realm_key)
+        # Remove from weak areas if now strong
+        if realm_key in st.session_state.player_progress['weak_areas']:
+            st.session_state.player_progress['weak_areas'].remove(realm_key)
+
+def show_progress_dashboard():
+    """Display comprehensive progress dashboard with charts"""
+    progress = st.session_state.player_progress
+    
+    if not progress['completed_chapters']:
+        st.info("🌱 Complete your first chapter to see your progress dashboard!")
+        return
+    
+    st.subheader("📊 Your Learning Journey Dashboard")
+    
+    # Overall stats
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        total_chapters = sum(len(difficulties) for difficulties in progress['completed_chapters'].values())
+        st.metric("Chapters Completed", total_chapters)
+    with col2:
+        overall_accuracy = (progress['total_correct'] / progress['total_questions'] * 100) if progress['total_questions'] > 0 else 0
+        st.metric("Overall Accuracy", f"{overall_accuracy:.1f}%")
+    with col3:
+        mastered_realms = sum(1 for score in progress['realm_mastery'].values() if score >= 89)
+        st.metric("Mastered Realms", mastered_realms)
+    with col4:
+        st.metric("Total Questions", progress['total_questions'])
+    
+    # Realm mastery chart
+    if progress['realm_mastery']:
+        st.subheader("🏆 Realm Mastery Overview")
+        
+        import plotly.graph_objects as go
+        import plotly.express as px
+        
+        # Create realm mastery bar chart
+        realm_names = [ADVENTURE_REALMS[key]['name'] for key in progress['realm_mastery'].keys()]
+        realm_scores = list(progress['realm_mastery'].values())
+        realm_colors = ['#28a745' if score >= 89 else '#ffc107' if score >= 70 else '#dc3545' for score in realm_scores]
+        
+        fig = go.Figure(data=[
+            go.Bar(
+                x=realm_names,
+                y=realm_scores,
+                marker_color=realm_colors,
+                text=[f"{score:.1f}%" for score in realm_scores],
+                textposition='auto',
+            )
+        ])
+        
+        fig.update_layout(
+            title="Realm Mastery Levels",
+            xaxis_title="Realms",
+            yaxis_title="Average Score (%)",
+            yaxis=dict(range=[0, 100]),
+            height=400
+        )
+        
+        # Add mastery threshold line
+        fig.add_hline(y=89, line_dash="dash", line_color="green", annotation_text="Mastery Threshold (89%)")
+        fig.add_hline(y=70, line_dash="dash", line_color="orange", annotation_text="Good Progress (70%)")
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Chapter-level progress
+        st.subheader("📚 Detailed Chapter Progress")
+        for realm_key, difficulties in progress['completed_chapters'].items():
+            realm_info = ADVENTURE_REALMS[realm_key]
+            st.write(f"**{realm_info['emoji']} {realm_info['name']}**")
+            
+            chapter_cols = st.columns(len(difficulties))
+            for i, (diff, data) in enumerate(difficulties.items()):
+                with chapter_cols[i]:
+                    chapter_name = realm_info['difficulty_chapters'][diff]
+                    color = "green" if data['percentage'] >= 89 else "orange" if data['percentage'] >= 70 else "red"
+                    st.markdown(f"""
+                    <div style="border: 2px solid {color}; border-radius: 10px; padding: 10px; margin: 5px 0;">
+                        <h5>{chapter_name}</h5>
+                        <p><strong>{data['percentage']:.1f}%</strong></p>
+                        <p>{data['score']}/{data['total']} correct</p>
+                        <p>Attempts: {data['attempts']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+    
+    # Recommendations based on progress
+    st.subheader("🎯 Personalized Recommendations")
+    
+    weak_realms = [realm for realm, score in progress['realm_mastery'].items() if score < 70]
+    strong_realms = [realm for realm, score in progress['realm_mastery'].items() if score >= 89]
+    
+    if weak_realms:
+        weak_realm_key = weak_realms[0]  # Focus on weakest
+        weak_realm = ADVENTURE_REALMS[weak_realm_key]
+        st.warning(f"🎯 **Priority Focus**: {weak_realm['emoji']} {weak_realm['name']} - Current average: {progress['realm_mastery'][weak_realm_key]:.1f}%")
+    
+    if strong_realms:
+        st.success(f"🌟 **Strong Areas**: {', '.join([ADVENTURE_REALMS[r]['name'] for r in strong_realms])}")
+    
+    # Learning path visualization
+    if len(progress['learning_path']) > 1:
+        st.subheader("🛤️ Your Learning Journey")
+        journey_text = " → ".join([
+            f"{ADVENTURE_REALMS[path.split('_')[0]]['emoji']} {path.split('_')[1].title()}" 
+            for path in progress['learning_path']
+        ])
+        st.write(journey_text)
+
 # ========================================
 # ADVENTURE FUNCTIONS
 # ========================================
@@ -331,6 +477,18 @@ def main():
     """Main adventure application"""
     show_adventure_title()
     
+    # Initialize comprehensive progress tracking system
+    if 'player_progress' not in st.session_state:
+        st.session_state.player_progress = {
+            'completed_chapters': {},  # {realm: {difficulty: {score: X, attempts: Y, date: Z}}}
+            'realm_mastery': {},       # {realm: average_score}
+            'total_questions': 0,
+            'total_correct': 0,
+            'learning_path': [],       # Track which realms/chapters completed in order
+            'weak_areas': [],          # Track consistently weak topics
+            'strong_areas': []         # Track consistently strong topics
+        }
+    
     # Initialize session state
     if 'current_realm' not in st.session_state:
         st.session_state.current_realm = None
@@ -369,6 +527,12 @@ def main():
 def show_realm_selection():
     """Display the five mystical realms for selection"""
     st.markdown('<div class="ornament">⚡ ✨ 🌟 ✨ ⚡</div>', unsafe_allow_html=True)
+    
+    # Progress dashboard toggle
+    if st.session_state.player_progress['completed_chapters']:
+        if st.button("📊 View My Progress Dashboard", type="secondary", use_container_width=True):
+            show_progress_dashboard()
+            st.markdown("---")
     
     st.markdown("""
     <div class="chapter-heading">
@@ -666,11 +830,14 @@ def show_quiz_question(realm_key, difficulty):
             st.rerun()
 
 def show_quiz_results(realm_key, difficulty):
-    """Show the results after completing a quiz with ML-powered weakness analysis"""
+    """Show the results after completing a quiz with comprehensive progress tracking and ML analysis"""
     realm_info = ADVENTURE_REALMS[realm_key]
     total_questions = len(st.session_state.quiz_questions)
     score = st.session_state.quiz_score
     percentage = (score / total_questions) * 100 if total_questions > 0 else 0
+    
+    # Update comprehensive progress tracking
+    update_user_progress(realm_key, difficulty, score, total_questions)
     
     st.markdown(f"""
     <div class="chapter-heading">
@@ -691,37 +858,57 @@ def show_quiz_results(realm_key, difficulty):
             value=f"{score}/{total_questions}",
             delta=f"{percentage:.1f}% Accuracy"
         )
-    
-    # 🧠 ML-Powered Weakness Analysis
+    # 🧠 Enhanced ML-Powered Analysis Based on Complete Progress
     st.subheader("🧠 ML Oracle's Wisdom")
-    st.info("🔮 The ML Oracle is analyzing your performance patterns...")
+    st.info("🔮 Analyzing your complete learning journey...")
     
     try:
-        # Smart ML prediction based on current performance
+        progress = st.session_state.player_progress
         current_performance = percentage / 100
         
-        # Analyze current performance to predict weakest area
-        if current_performance < 0.6:  # Below 60%
-            # If struggling in current realm, recommend staying here
-            weak_realm_key = realm_key
-            ml_insight = f"Focus on mastering **{realm_info['name']}** first - your {percentage:.1f}% score shows this area needs attention."
-        elif current_performance < 0.89:  # Below mastery threshold
-            # Predict complementary weak area based on current realm
-            complementary_realms = {
-                'grammar': 'sentences',      # Grammar helps with sentence structure
-                'articles': 'grammar',       # Articles are part of grammar rules
-                'synonyms': 'antonyms',      # Opposite concepts reinforce each other
-                'antonyms': 'synonyms',      # Opposite concepts reinforce each other  
-                'sentences': 'grammar'       # Sentence structure needs grammar foundation
-            }
-            weak_realm_key = complementary_realms.get(realm_key, 'grammar')  # Default to grammar
-            ml_insight = f"Great progress in **{realm_info['name']}**! Now strengthen **{ADVENTURE_REALMS[weak_realm_key]['name']}** to boost your overall mastery by 15-20%."
-        else:  # 89%+ mastery
-            # Find a challenging area for advanced learners
-            advanced_challenges = ['sentences', 'antonyms', 'synonyms', 'grammar', 'articles']
-            # Pick different realm than current
-            weak_realm_key = next((r for r in advanced_challenges if r != realm_key), 'grammar')
-            ml_insight = f"Excellent mastery of **{realm_info['name']}**! Challenge yourself with **{ADVENTURE_REALMS[weak_realm_key]['name']}** for advanced learning."
+        # Enhanced ML prediction based on ALL user progress data
+        if len(progress['completed_chapters']) > 1:
+            # Use actual progress data for intelligent recommendations
+            weakest_realm = None
+            weakest_score = 100
+            
+            for realm, score in progress['realm_mastery'].items():
+                if score < weakest_score:
+                    weakest_score = score
+                    weakest_realm = realm
+            
+            # Smart recommendations based on complete progress
+            if current_performance < 0.6:
+                weak_realm_key = realm_key  # Stay in current area
+                ml_insight = f"Focus on mastering **{realm_info['name']}** first - your {percentage:.1f}% score shows this area needs more practice."
+            elif weakest_realm and weakest_score < 80:
+                weak_realm_key = weakest_realm
+                ml_insight = f"Based on your journey across {len(progress['completed_chapters'])} realms, **{ADVENTURE_REALMS[weak_realm_key]['name']}** needs attention (avg: {weakest_score:.1f}%)."
+            else:
+                # Find unvisited realms for exploration
+                visited_realms = set(progress['completed_chapters'].keys())
+                all_realms = set(ADVENTURE_REALMS.keys())
+                unvisited = all_realms - visited_realms
+                
+                if unvisited:
+                    weak_realm_key = list(unvisited)[0]
+                    ml_insight = f"Excellent progress! Time to explore **{ADVENTURE_REALMS[weak_realm_key]['name']}** for new challenges."
+                else:
+                    weak_realm_key = realm_key
+                    ml_insight = f"Outstanding mastery across all realms! Consider advancing to harder difficulties."
+        else:
+            # First-time user - use simple logic
+            if current_performance < 0.6:
+                weak_realm_key = realm_key
+                ml_insight = f"Focus on mastering **{realm_info['name']}** first - your {percentage:.1f}% score shows this area needs attention."
+            else:
+                # Suggest complementary realm
+                complementary_realms = {
+                    'grammar': 'sentences', 'articles': 'grammar', 'synonyms': 'antonyms',
+                    'antonyms': 'synonyms', 'sentences': 'grammar'
+                }
+                weak_realm_key = complementary_realms.get(realm_key, 'grammar')
+                ml_insight = f"Great start! Try **{ADVENTURE_REALMS[weak_realm_key]['name']}** next to build complementary skills."
         
         weak_realm_info = ADVENTURE_REALMS.get(weak_realm_key, realm_info)
         
@@ -731,6 +918,10 @@ def show_quiz_results(realm_key, difficulty):
         st.write(f"*\"{weak_realm_info['description']}\"*")
         
         st.success(f"🧠 **ML Insight:** {ml_insight}")
+        
+        # Show mini progress dashboard after each quiz
+        st.subheader("📈 Your Progress So Far")
+        show_progress_dashboard()
         
     except Exception as e:
         st.error(f"🤖 ML Oracle is temporarily unavailable: {str(e)}")
