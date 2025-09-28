@@ -110,6 +110,7 @@ Each realm contains **three difficulty chapters**:
 
 ### **🗺️ Island Selection Screen**
 
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  🗺️ Choose Your Learning Island                         │
@@ -122,7 +123,7 @@ Each realm contains **three difficulty chapters**:
 │                                                         │
 ---
 
-## �️ **Technology Stack**
+##  **Technology Stack**
 
 ### **🧠 Advanced Machine Learning Core**
 - **🎯 Enhanced Random Forest Weakness Detector**: 88.4% cross-validation accuracy with 11 sophisticated features
@@ -146,7 +147,6 @@ Each realm contains **three difficulty chapters**:
 - **Difficulty Levels**: Easy, Medium, Hard progression system
 - **Progress Tracking**: Score history and performance analytics
 
----
 
 ## 📁 **Project Structure**
 
@@ -171,7 +171,7 @@ ManabiFun/
     └── screenshots/                # App screenshots for README
 ```
 
----
+
 
 ## 🚀 **Current Features**
 
@@ -227,7 +227,7 @@ ManabiFun/
 - **Mistake Review**: Learn from incorrect answers
 - **Next Steps**: Retry or continue to island selection
 
----
+
 
 ### **🤖 AI Weakness Detection**
 
@@ -256,7 +256,7 @@ ManabiFun/
 - **Visual Analytics**: Charts and graphs for progress tracking
 - **Personalized Learning**: Adaptive content suggestions
 
----
+
 
 ## 🔧 **Technical Architecture**
 
@@ -388,7 +388,7 @@ def fisher_yates_shuffle(questions_list):
    Solution: Each option tests different grammar concepts!
 ```
 
----
+
 
 ## 🧪 **ML Model Training & Validation Results**
 
