@@ -14,6 +14,7 @@ import os
 from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
+from student_analyzer import student_analyzer
 
 # ========================================
 # PAGE CONFIGURATION & STYLING
@@ -530,9 +531,15 @@ def show_realm_selection():
     
     # Progress dashboard toggle
     if st.session_state.player_progress['completed_chapters']:
-        if st.button("📊 View My Progress Dashboard", type="secondary", use_container_width=True):
-            show_progress_dashboard()
-            st.markdown("---")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("📊 View My Progress Dashboard", type="secondary", use_container_width=True):
+                show_progress_dashboard()
+                st.markdown("---")
+        with col2:
+            if st.button("🎓 Generate Student Report", type="primary", use_container_width=True):
+                show_student_report()
+                st.markdown("---")
     
     st.markdown("""
     <div class="chapter-heading">
@@ -858,66 +865,114 @@ def show_quiz_results(realm_key, difficulty):
             value=f"{score}/{total_questions}",
             delta=f"{percentage:.1f}% Accuracy"
         )
-    # 🧠 Enhanced ML-Powered Analysis Based on Complete Progress
+    # 🧠 Progressive ML Oracle Based on Learning Journey Stage
     st.subheader("🧠 ML Oracle's Wisdom")
-    st.info("🔮 Analyzing your complete learning journey...")
     
     try:
         progress = st.session_state.player_progress
         current_performance = percentage / 100
+        total_chapters_completed = sum(len(difficulties) for difficulties in progress['completed_chapters'].values())
         
-        # Enhanced ML prediction based on ALL user progress data
-        if len(progress['completed_chapters']) > 1:
-            # Use actual progress data for intelligent recommendations
-            weakest_realm = None
-            weakest_score = 100
-            
-            for realm, score in progress['realm_mastery'].items():
-                if score < weakest_score:
-                    weakest_score = score
-                    weakest_realm = realm
-            
-            # Smart recommendations based on complete progress
-            if current_performance < 0.6:
-                weak_realm_key = realm_key  # Stay in current area
-                ml_insight = f"Focus on mastering **{realm_info['name']}** first - your {percentage:.1f}% score shows this area needs more practice."
-            elif weakest_realm and weakest_score < 80:
-                weak_realm_key = weakest_realm
-                ml_insight = f"Based on your journey across {len(progress['completed_chapters'])} realms, **{ADVENTURE_REALMS[weak_realm_key]['name']}** needs attention (avg: {weakest_score:.1f}%)."
+        # Progressive recommendations based on learning journey stage
+        if total_chapters_completed == 1:
+            # First chapter completed - encouragement and basic guidance
+            st.info("🌱 Analyzing your first adventure...")
+            if current_performance >= 0.89:
+                ml_insight = f"Outstanding debut! You've mastered **{realm_info['name']}** with {percentage:.1f}%! Ready to explore new realms?"
+                weak_realm_key = None  # No specific recommendation yet
+                recommendation = "🎉 **Excellent start!** You're ready to explore any realm that interests you. All paths are open!"
+            elif current_performance >= 0.70:
+                ml_insight = f"Great first chapter! {percentage:.1f}% shows solid understanding. Consider trying a few more chapters to build confidence."
+                weak_realm_key = realm_key  # Suggest same realm for confidence building
+                recommendation = f"💪 **Good progress!** Try another chapter in **{realm_info['name']}** to build mastery, or explore a new realm!"
             else:
-                # Find unvisited realms for exploration
+                ml_insight = f"Good effort on your first chapter! {percentage:.1f}% is a solid foundation to build upon."
+                weak_realm_key = realm_key
+                recommendation = f"📚 **Keep practicing!** Try the same chapter again or an easier difficulty in **{realm_info['name']}** to build confidence."
+        
+        elif total_chapters_completed <= 3:
+            # 2-3 chapters completed - exploration phase
+            st.info("🔮 Analyzing your early adventures...")
+            
+            # Check if they're exploring different realms or focusing on one
+            realms_visited = len(progress['completed_chapters'])
+            
+            if realms_visited == 1:
+                # Focused on one realm - suggest exploration
+                avg_score = progress['realm_mastery'][realm_key]
+                if avg_score >= 85:
+                    unvisited = set(ADVENTURE_REALMS.keys()) - {realm_key}
+                    weak_realm_key = list(unvisited)[0] if unvisited else realm_key
+                    ml_insight = f"Excellent focus! You're excelling in **{realm_info['name']}** (avg: {avg_score:.1f}%)."
+                    recommendation = f"🌟 **Time to explore!** Try **{ADVENTURE_REALMS[weak_realm_key]['name']}** to broaden your skills!"
+                else:
+                    weak_realm_key = realm_key
+                    ml_insight = f"Building mastery in **{realm_info['name']}** (avg: {avg_score:.1f}%). Keep strengthening this foundation!"
+                    recommendation = f"🎯 **Focus mode!** Continue with **{realm_info['name']}** until you reach 89% mastery."
+            else:
+                # Exploring multiple realms - general encouragement
+                best_realm = max(progress['realm_mastery'].items(), key=lambda x: x[1])
+                worst_realm = min(progress['realm_mastery'].items(), key=lambda x: x[1])
+                
+                weak_realm_key = worst_realm[0]
+                ml_insight = f"Great exploration! Your strongest area is **{ADVENTURE_REALMS[best_realm[0]]['name']}** ({best_realm[1]:.1f}%)."
+                recommendation = f"🎨 **Balanced explorer!** Consider revisiting **{ADVENTURE_REALMS[weak_realm_key]['name']}** ({worst_realm[1]:.1f}%) for improvement."
+        
+        else:
+            # 4+ chapters completed - detailed analysis with specific chapter recommendations
+            st.info("🧠 Performing deep analysis of your learning journey...")
+            
+            # Find chapters that need revisiting (below 89%)
+            chapters_needing_work = []
+            for realm_key_check, difficulties in progress['completed_chapters'].items():
+                for diff, data in difficulties.items():
+                    if data['percentage'] < 89:
+                        chapter_name = ADVENTURE_REALMS[realm_key_check]['difficulty_chapters'][diff]
+                        chapters_needing_work.append({
+                            'realm': realm_key_check,
+                            'difficulty': diff,
+                            'chapter_name': chapter_name,
+                            'score': data['percentage'],
+                            'realm_name': ADVENTURE_REALMS[realm_key_check]['name']
+                        })
+            
+            if chapters_needing_work:
+                # Sort by lowest score - recommend weakest chapter
+                chapters_needing_work.sort(key=lambda x: x['score'])
+                weakest_chapter = chapters_needing_work[0]
+                
+                weak_realm_key = weakest_chapter['realm']
+                ml_insight = f"Analysis complete! I've identified {len(chapters_needing_work)} chapters below mastery level (89%)."
+                recommendation = f"🎯 **Priority Chapter:** Revisit **{weakest_chapter['chapter_name']}** in **{weakest_chapter['realm_name']}** (current: {weakest_chapter['score']:.1f}%)"
+                
+                if len(chapters_needing_work) > 1:
+                    recommendation += f"\n\n📋 **Also consider:** {len(chapters_needing_work)-1} other chapters need attention for full mastery."
+            else:
+                # All chapters mastered - suggest new exploration
                 visited_realms = set(progress['completed_chapters'].keys())
                 all_realms = set(ADVENTURE_REALMS.keys())
                 unvisited = all_realms - visited_realms
                 
                 if unvisited:
                     weak_realm_key = list(unvisited)[0]
-                    ml_insight = f"Excellent progress! Time to explore **{ADVENTURE_REALMS[weak_realm_key]['name']}** for new challenges."
+                    ml_insight = f"🏆 **Incredible mastery!** All {total_chapters_completed} completed chapters are above 89%!"
+                    recommendation = f"🚀 **New frontier:** Explore **{ADVENTURE_REALMS[weak_realm_key]['name']}** for fresh challenges!"
                 else:
                     weak_realm_key = realm_key
-                    ml_insight = f"Outstanding mastery across all realms! Consider advancing to harder difficulties."
-        else:
-            # First-time user - use simple logic
-            if current_performance < 0.6:
-                weak_realm_key = realm_key
-                ml_insight = f"Focus on mastering **{realm_info['name']}** first - your {percentage:.1f}% score shows this area needs attention."
-            else:
-                # Suggest complementary realm
-                complementary_realms = {
-                    'grammar': 'sentences', 'articles': 'grammar', 'synonyms': 'antonyms',
-                    'antonyms': 'synonyms', 'sentences': 'grammar'
-                }
-                weak_realm_key = complementary_realms.get(realm_key, 'grammar')
-                ml_insight = f"Great start! Try **{ADVENTURE_REALMS[weak_realm_key]['name']}** next to build complementary skills."
+                    ml_insight = f"🎖️ **LEGENDARY STATUS!** You've mastered all realms with 89%+ scores!"
+                    recommendation = "👑 **Master of All Realms!** Try harder difficulties or help others on their journey!"
         
-        weak_realm_info = ADVENTURE_REALMS.get(weak_realm_key, realm_info)
-        
-        # Display ML results using Streamlit components
+        # Display progressive ML recommendations
         st.write(f"**📈 Current Performance:** {percentage:.1f}% in {realm_info['name']}")
-        st.write(f"**🎯 Recommended Focus Area:** {weak_realm_info['emoji']} **{weak_realm_info['name']}**")
-        st.write(f"*\"{weak_realm_info['description']}\"*")
-        
         st.success(f"🧠 **ML Insight:** {ml_insight}")
+        
+        if 'weak_realm_key' in locals() and weak_realm_key and weak_realm_key != realm_key:
+            weak_realm_info = ADVENTURE_REALMS.get(weak_realm_key)
+            if weak_realm_info:
+                st.write(f"**🎯 Recommended Focus Area:** {weak_realm_info['emoji']} **{weak_realm_info['name']}**")
+                st.write(f"*\"{weak_realm_info['description']}\"*")
+        
+        st.info(recommendation)
         
         # Show mini progress dashboard after each quiz
         st.subheader("📈 Your Progress So Far")
@@ -956,6 +1011,185 @@ def show_quiz_results(realm_key, difficulty):
             st.session_state.quiz_score = 0
             st.session_state.current_realm = None
             st.session_state.current_chapter = None
+            st.rerun()
+
+def show_student_report():
+    """Display comprehensive ML-powered student analysis report"""
+    st.markdown('<div class="ornament">🎓 ✨ 📊 ✨ 🎓</div>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="chapter-heading">
+        🧠 AI-Powered Student Analysis Report
+    </div>
+    """, unsafe_allow_html=True)
+    
+    progress_data = st.session_state.player_progress
+    
+    if not progress_data['completed_chapters']:
+        st.warning("📝 Complete at least one chapter to generate your personalized student report!")
+        return
+    
+    # Generate comprehensive report using ML models
+    with st.spinner("🤖 AI Oracle analyzing your learning patterns..."):
+        report = student_analyzer.generate_student_report(
+            st.session_state.player_name,
+            progress_data
+        )
+    
+    if 'error' in report:
+        st.error(f"❌ {report['error']}")
+        return
+    
+    # Display report header
+    st.markdown(f"""
+    <div class="story-text">
+        <h3>📋 Student Report for {report['student_name']}</h3>
+        <p><em>Generated on: {report['report_date']}</em></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Summary metrics
+    st.subheader("📊 Performance Summary")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "Chapters Completed",
+            report['summary']['total_chapters'],
+            help="Total number of chapters you've completed across all realms"
+        )
+    
+    with col2:
+        st.metric(
+            "Overall Accuracy",
+            f"{report['summary']['overall_accuracy']:.1f}%",
+            help="Your average performance across all questions"
+        )
+    
+    with col3:
+        st.metric(
+            "Realms Mastered",
+            f"{report['summary']['realms_mastered']}/5",
+            help="Number of realms where you've achieved 89%+ mastery"
+        )
+    
+    with col4:
+        st.metric(
+            "Consistency Score",
+            f"{report['summary']['consistency_score']:.1f}%",
+            help="How consistent your performance is across topics"
+        )
+    
+    # ML Analysis Section
+    st.subheader("🧠 AI Machine Learning Analysis")
+    
+    ml_analysis = report['ml_analysis']
+    
+    # Primary weakness with confidence
+    confidence_color = "green" if ml_analysis['confidence'] > 0.8 else "orange" if ml_analysis['confidence'] > 0.6 else "red"
+    
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-left: 5px solid {confidence_color}; padding: 15px; margin: 10px 0; border-radius: 5px;">
+        <h4>🎯 Primary Focus Area: {ml_analysis['primary_weakness'].title()}</h4>
+        <p><strong>AI Confidence:</strong> {ml_analysis['confidence']:.1%}</p>
+        <p><strong>Learning Trajectory:</strong> {ml_analysis['learning_trajectory'].title()}</p>
+        <p><strong>Improvement Probability:</strong> {ml_analysis['improvement_probability']:.1%}</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Detailed weakness breakdown
+    st.subheader("🔍 Detailed Area Analysis")
+    
+    weakness_data = ml_analysis['weakness_breakdown']
+    
+    # Create visualization for weakness probabilities
+    topics = list(weakness_data.keys())
+    weakness_probs = [data['weakness_probability'] * 100 for data in weakness_data.values()]
+    current_scores = [data['current_score'] * 100 for data in weakness_data.values()]
+    
+    fig = go.Figure()
+    
+    # Add current performance bars
+    fig.add_trace(go.Bar(
+        name='Current Performance',
+        x=topics,
+        y=current_scores,
+        marker_color='lightblue',
+        yaxis='y'
+    ))
+    
+    # Add weakness probability line
+    fig.add_trace(go.Scatter(
+        name='Needs Attention (%)',
+        x=topics,
+        y=weakness_probs,
+        mode='lines+markers',
+        marker_color='red',
+        line=dict(width=3),
+        yaxis='y2'
+    ))
+    
+    fig.update_layout(
+        title='Performance vs. Areas Needing Attention',
+        xaxis_title='Learning Areas',
+        yaxis=dict(title='Current Performance (%)', side='left', range=[0, 100]),
+        yaxis2=dict(title='Attention Needed (%)', side='right', range=[0, 100], overlaying='y'),
+        height=400,
+        hovermode='x unified'
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Recommendations section
+    st.subheader("💡 Personalized Recommendations")
+    
+    for rec in report['recommendations']:
+        priority_color = {"HIGH": "red", "MEDIUM": "orange", "LOW": "green"}[rec['priority']]
+        
+        st.markdown(f"""
+        <div style="border-left: 4px solid {priority_color}; padding: 10px; margin: 5px 0; background: #f8f9fa;">
+            <h5>🎯 {rec['action']} <span style="color: {priority_color};">({rec['priority']} Priority)</span></h5>
+            <p><strong>Why:</strong> {rec['reason']}</p>
+            <p><strong>Timeline:</strong> {rec['timeline']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Learning insights
+    st.subheader("🌟 Learning Insights")
+    
+    for insight in report['learning_insights']:
+        st.markdown(f"- {insight}")
+    
+    # Detailed performance table
+    with st.expander("📈 Detailed Performance Breakdown"):
+        performance_df = pd.DataFrame([
+            {
+                'Area': area.title(),
+                'Current Score': f"{data['current_score']*100:.1f}%",
+                'Needs Attention': "Yes" if data['needs_attention'] else "No",
+                'Weakness Probability': f"{data['weakness_probability']*100:.1f}%"
+            }
+            for area, data in weakness_data.items()
+        ])
+        st.dataframe(performance_df, use_container_width=True)
+    
+    # Action buttons
+    st.markdown("---")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("📚 Practice Weak Areas", type="primary", use_container_width=True):
+            # Navigate to the weakest realm
+            weakest_realm = ml_analysis['primary_weakness']
+            st.session_state.current_realm = weakest_realm
+            st.rerun()
+    
+    with col2:
+        if st.button("📊 View Progress Dashboard", use_container_width=True):
+            show_progress_dashboard()
+    
+    with col3:
+        if st.button("🏠 Back to Adventure", use_container_width=True):
             st.rerun()
 
 # Run the adventure!
