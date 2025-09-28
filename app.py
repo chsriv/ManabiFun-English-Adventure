@@ -35,20 +35,19 @@ st.markdown("""
     }
     
     .book-title {
-        background: linear-gradient(45deg, #8b4513, #cd853f, #daa520);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        background: linear-gradient(135deg, #2c1810, #8b4513, #cd853f);
+        color: #f4f1e8;
         text-align: center;
         font-size: 3rem;
         font-weight: bold;
         font-family: 'Cinzel Decorative', cursive;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         margin: 2rem 0;
-        padding: 1rem;
+        padding: 2rem;
         border: 3px solid #cd853f;
         border-radius: 15px;
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(10px);
+        background: linear-gradient(135deg, #2c1810, #8b4513);
+        box-shadow: 0 8px 25px rgba(205, 133, 63, 0.3);
     }
     
     .chapter-heading {
