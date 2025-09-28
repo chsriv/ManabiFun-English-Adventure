@@ -678,30 +678,23 @@ def show_quiz_results(realm_key, difficulty):
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown(f"""
-    <div class="story-text">
-        <h3>🌟 Congratulations, {st.session_state.player_name}! 🌟</h3>
-        <p>You have successfully completed the <strong>{realm_info['difficulty_chapters'][difficulty]}</strong> 
-        in <strong>{realm_info['name']}</strong>!</p>
-        
-        <div style="text-align: center; margin: 2rem 0;">
-            <h2 style="color: #8b4513;">📊 Your Results</h2>
-            <p style="font-size: 1.5rem; color: #2c1810;">
-                <strong>{score} out of {total_questions}</strong> correct
-            </p>
-            <p style="font-size: 1.3rem; color: #cd853f;">
-                <strong>{percentage:.1f}% Accuracy</strong>
-            </p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Use simple Streamlit components instead of complex HTML
+    st.success(f"🌟 Congratulations, {st.session_state.player_name}! 🌟")
+    st.write(f"You have successfully completed the **{realm_info['difficulty_chapters'][difficulty]}** in **{realm_info['name']}**!")
+    
+    # Results display
+    st.subheader("📊 Your Results")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.metric(
+            label="Score",
+            value=f"{score}/{total_questions}",
+            delta=f"{percentage:.1f}% Accuracy"
+        )
     
     # 🧠 ML-Powered Weakness Analysis
-    st.markdown("""
-    <div class="chapter-heading" style="background: linear-gradient(135deg, #4a148c, #7b1fa2); margin-top: 2rem;">
-        🧠 ML Oracle's Wisdom
-    </div>
-    """, unsafe_allow_html=True)
+    st.subheader("🧠 ML Oracle's Wisdom")
+    st.info("🔮 The ML Oracle is analyzing your performance patterns...")
     
     try:
         # Create performance scores for all topics (dummy data for other topics, actual for current)
@@ -741,31 +734,16 @@ def show_quiz_results(realm_key, difficulty):
         weak_realm_key = topic_to_realm.get(weak_topic, realm_key)
         weak_realm_info = ADVENTURE_REALMS.get(weak_realm_key, realm_info)
         
-        st.markdown(f"""
-        <div class="story-text">
-            <h4>🔮 The ML Oracle has analyzed your performance...</h4>
-            
-            <p><strong>📈 Current Performance:</strong> {percentage:.1f}% in {realm_info['name']}</p>
-            
-            <p><strong>🎯 Recommended Focus Area:</strong> {weak_realm_info['emoji']} <strong>{weak_realm_info['name']}</strong></p>
-            
-            <p><em>"{weak_realm_info['description']}"</em></p>
-            
-            <div style="background: rgba(123, 31, 162, 0.1); padding: 1rem; border-radius: 10px; margin: 1rem 0;">
-                <strong>🧠 ML Insight:</strong> Based on patterns from thousands of learners, 
-                strengthening your skills in <strong>{weak_realm_info['name']}</strong> will boost 
-                your overall English mastery by an estimated 15-20%.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Display ML results using Streamlit components
+        st.write(f"**📈 Current Performance:** {percentage:.1f}% in {realm_info['name']}")
+        st.write(f"**🎯 Recommended Focus Area:** {weak_realm_info['emoji']} **{weak_realm_info['name']}**")
+        st.write(f"*\"{weak_realm_info['description']}\"*")
+        
+        st.success(f"🧠 **ML Insight:** Based on patterns from thousands of learners, strengthening your skills in **{weak_realm_info['name']}** will boost your overall English mastery by an estimated 15-20%.")
         
     except Exception as e:
-        st.markdown(f"""
-        <div class="story-text">
-            <h4>🔮 The ML Oracle is consulting the ancient scrolls...</h4>
-            <p><em>The mystical analysis will be ready for your next adventure!</em></p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.error(f"🤖 ML Oracle is temporarily unavailable: {str(e)}")
+        st.info("🔮 The mystical analysis will be ready for your next adventure!")
         print(f"ML Analysis Error: {e}")
     
     # Performance feedback
