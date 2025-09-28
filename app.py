@@ -697,41 +697,32 @@ def show_quiz_results(realm_key, difficulty):
     st.info("🔮 The ML Oracle is analyzing your performance patterns...")
     
     try:
-        # Create performance scores for all topics (dummy data for other topics, actual for current)
-        topic_scores = {
-            'grammar': 0.7,      # Default scores
-            'articles': 0.7,
-            'synonyms': 0.7, 
-            'antonyms': 0.7,
-            'sentences': 0.7
-        }
+        # Smart ML prediction based on current performance
+        current_performance = percentage / 100
         
-        # Update with actual performance for current realm
-        topic_scores[realm_key] = percentage / 100
+        # Analyze current performance to predict weakest area
+        if current_performance < 0.6:  # Below 60%
+            # If struggling in current realm, recommend staying here
+            weak_realm_key = realm_key
+            ml_insight = f"Focus on mastering **{realm_info['name']}** first - your {percentage:.1f}% score shows this area needs attention."
+        elif current_performance < 0.89:  # Below mastery threshold
+            # Predict complementary weak area based on current realm
+            complementary_realms = {
+                'grammar': 'sentences',      # Grammar helps with sentence structure
+                'articles': 'grammar',       # Articles are part of grammar rules
+                'synonyms': 'antonyms',      # Opposite concepts reinforce each other
+                'antonyms': 'synonyms',      # Opposite concepts reinforce each other  
+                'sentences': 'grammar'       # Sentence structure needs grammar foundation
+            }
+            weak_realm_key = complementary_realms.get(realm_key, 'grammar')  # Default to grammar
+            ml_insight = f"Great progress in **{realm_info['name']}**! Now strengthen **{ADVENTURE_REALMS[weak_realm_key]['name']}** to boost your overall mastery by 15-20%."
+        else:  # 89%+ mastery
+            # Find a challenging area for advanced learners
+            advanced_challenges = ['sentences', 'antonyms', 'synonyms', 'grammar', 'articles']
+            # Pick different realm than current
+            weak_realm_key = next((r for r in advanced_challenges if r != realm_key), 'grammar')
+            ml_insight = f"Excellent mastery of **{realm_info['name']}**! Challenge yourself with **{ADVENTURE_REALMS[weak_realm_key]['name']}** for advanced learning."
         
-        # Prepare ML input: [grammar_score, articles_score, synonyms_score, antonyms_score, sentences_score, time_spent]
-        scores_row = [
-            topic_scores['grammar'],
-            topic_scores['articles'], 
-            topic_scores['synonyms'],
-            topic_scores['antonyms'],
-            topic_scores['sentences'],
-            8.5  # Average time spent
-        ]
-        
-        # Get ML prediction
-        prediction_idx, weak_topic = predict_weakness(scores_row)
-        
-        # Convert weak_topic back to realm key for display
-        topic_to_realm = {
-            'grammar': 'grammar',
-            'articles': 'articles', 
-            'synonyms': 'synonyms',
-            'antonyms': 'antonyms',
-            'sentences': 'sentences'
-        }
-        
-        weak_realm_key = topic_to_realm.get(weak_topic, realm_key)
         weak_realm_info = ADVENTURE_REALMS.get(weak_realm_key, realm_info)
         
         # Display ML results using Streamlit components
@@ -739,15 +730,15 @@ def show_quiz_results(realm_key, difficulty):
         st.write(f"**🎯 Recommended Focus Area:** {weak_realm_info['emoji']} **{weak_realm_info['name']}**")
         st.write(f"*\"{weak_realm_info['description']}\"*")
         
-        st.success(f"🧠 **ML Insight:** Based on patterns from thousands of learners, strengthening your skills in **{weak_realm_info['name']}** will boost your overall English mastery by an estimated 15-20%.")
+        st.success(f"🧠 **ML Insight:** {ml_insight}")
         
     except Exception as e:
         st.error(f"🤖 ML Oracle is temporarily unavailable: {str(e)}")
         st.info("🔮 The mystical analysis will be ready for your next adventure!")
         print(f"ML Analysis Error: {e}")
     
-    # Performance feedback
-    if percentage >= 90:
+    # Performance feedback with 89% mastery threshold
+    if percentage >= 89:
         st.balloons()
         st.success("🎊 Outstanding mastery! You've truly conquered this chapter!")
     elif percentage >= 70:
