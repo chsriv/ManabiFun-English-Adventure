@@ -1,4 +1,4 @@
-# � ManabiFun - English Learning Adventure
+#  ManabiFun - English Learning Adventure
 
 > **A Magical Journey Through the Five Realms of Language Learning**
 
@@ -121,6 +121,8 @@ Each realm contains **three difficulty chapters**:
 │  [🌴 Synonyms Jungle]    [🗻 Antonyms Mountain]         │
 │   🎯 Available             🔒 Locked                    │
 │                                                         │
+```
+
 ---
 
 ##  **Technology Stack**
@@ -147,6 +149,7 @@ Each realm contains **three difficulty chapters**:
 - **Difficulty Levels**: Easy, Medium, Hard progression system
 - **Progress Tracking**: Score history and performance analytics
 
+---
 
 ## 📁 **Project Structure**
 
@@ -171,7 +174,7 @@ ManabiFun/
     └── screenshots/                # App screenshots for README
 ```
 
-
+---
 
 ## 🚀 **Current Features**
 
@@ -283,7 +286,8 @@ ManabiFun/
 │  • Interactive Data Visualizations (Plotly charts)             │
 │  • Performance Breakdown (all 5 realms analysis)               │
 └──────────────────────────────────────────────────────────────────┘
-
+```
+```
 🎲 ENHANCED RANDOM FOREST MODELS:
 ├── Weakness Detector Model
 │   ├── 🌳 100+ Decision Trees with optimal hyperparameters
@@ -590,29 +594,6 @@ CUSTOM_TOPICS = {
     animation: pulse 2s infinite;
 }
 ```
-
----
-
-## 📚 **TOEFL Preparation Path**
-
-### **📈 Scaling to TOEFL Level**
-
-**Current Foundation:**
-- ✅ Basic English skills (Grammar, Articles, Vocabulary)
-- ✅ AI-powered weakness detection
-- ✅ Progressive difficulty system
-
-**TOEFL Enhancement Plan:**
-1. **Reading Comprehension** (30+ academic passages)
-2. **Listening Practice** (Audio-based questions)
-3. **Speaking Assessment** (Voice recognition)
-4. **Writing Evaluation** (Essay scoring)
-
-**Dataset Sources for TOEFL:**
-- ETS Official Practice Tests
-- Academic journal articles
-- University lecture transcripts
-- Standardized test prep materials
 
 ---
 
