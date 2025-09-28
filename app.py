@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+"""
+🌟 The Explorer's English Adventure 
+An Enid Blyton-style interactive learning adventure
+Transform English learning into a magical journey through enchanted realms!
+"""
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,6 +13,135 @@ import pickle
 import os
 from datetime import datetime
 import plotly.express as px
+import plotly.graph_objects as go
+
+# ========================================
+# PAGE CONFIGURATION & STYLING
+# ========================================
+
+st.set_page_config(
+    page_title="English Adventure Explorer",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# Custom CSS for Enid Blyton book styling
+st.markdown("""
+<style>
+    .main {
+        background: linear-gradient(135deg, #f4f1e8 0%, #e8dcc0 100%);
+        font-family: 'Times New Roman', serif;
+    }
+    
+    .book-title {
+        background: linear-gradient(45deg, #8b4513, #cd853f, #daa520);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        font-size: 3rem;
+        font-weight: bold;
+        font-family: 'Cinzel Decorative', cursive;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 3px solid #cd853f;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .chapter-heading {
+        background: linear-gradient(135deg, #2c1810, #8b4513);
+        color: #f4f1e8;
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 1.5rem 0;
+        border: 2px solid #cd853f;
+        box-shadow: 0 4px 15px rgba(205, 133, 63, 0.3);
+    }
+    
+    .story-text {
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid #cd853f;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        font-style: italic;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: #2c1810;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    .ornament {
+        text-align: center;
+        font-size: 1.5rem;
+        margin: 1rem 0;
+        color: #cd853f;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ========================================
+# ADVENTURE REALMS CONFIGURATION
+# ========================================
+
+ADVENTURE_REALMS = {
+    'grammar': {
+        'name': 'The Grammar Grove',
+        'emoji': '🌳',
+        'description': 'Ancient trees whisper the secrets of sentence structure',
+        'difficulty_chapters': {
+            'easy': 'Whispering Saplings',
+            'medium': 'Sturdy Oak Circle', 
+            'hard': 'Ancient Elder Council'
+        }
+    },
+    'articles': {
+        'name': 'The Article Archipelago',
+        'emoji': '🏝️',
+        'description': 'Mysterious islands where "a", "an", and "the" guard hidden treasures',
+        'difficulty_chapters': {
+            'easy': 'Gentle Tide Pools',
+            'medium': 'Coral Reef Gardens',
+            'hard': 'Deep Ocean Mysteries'
+        }
+    },
+    'synonyms': {
+        'name': 'The Synonym Sanctuary',
+        'emoji': '🦋',
+        'description': 'Enchanted meadow where words dance with their kindred spirits',
+        'difficulty_chapters': {
+            'easy': 'Butterfly Meadow',
+            'medium': 'Wildflower Fields',
+            'hard': 'Rainbow Garden Peak'
+        }
+    },
+    'antonyms': {
+        'name': 'The Antonym Arena',
+        'emoji': '⚔️',
+        'description': 'Training grounds where opposite words clash in epic battles',
+        'difficulty_chapters': {
+            'easy': 'Practice Grounds',
+            'medium': 'Combat Circle',
+            'hard': 'Champions Arena'
+        }
+    },
+    'sentences': {
+        'name': 'The Sentence Stronghold',
+        'emoji': '🏰',
+        'description': 'Majestic castle where words unite to form powerful declarations',
+        'difficulty_chapters': {
+            'easy': 'Courtyard Gardens',
+            'medium': 'Great Hall',
+            'hard': 'Royal Throne Room'
+        }
+    }
+}
 
 # ------------------------
 # Load Data
@@ -127,133 +263,146 @@ def predict_weakness(scores_row):
         print(f"⚠️ Prediction error: {e}")
         return 0, TOPICS[0]
 
-# ------------------------
-# Streamlit UI
-# ------------------------
-st.set_page_config(page_title="🌸 ManabiFun", layout="centered")
+# ========================================
+# ADVENTURE FUNCTIONS
+# ========================================
 
-st.title("🌸 ManabiFun - Learn English the Fun Way! 🌸")
+def show_adventure_title():
+    """Display the main book title"""
+    # Use player's name if available, otherwise use default
+    if 'player_name' in st.session_state and st.session_state.player_name:
+        title_name = f"{st.session_state.player_name}'s"
+    else:
+        title_name = "The Explorer's"
+    
+    st.markdown(f"""
+    <div class="book-title">
+         {title_name} English Adventure 
+        <br><span style="font-size: 1.2rem; font-weight: 400; font-style: italic;">
+            A Magical Journey Through the Five Realms of Language
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Student login (simple)
-student_name = st.text_input("Enter your name:", "")
-if student_name:
-    student_id = student_name[:2].upper() + str(random.randint(100,999))
-
-    # Pick topic
-    topic = st.selectbox("🏝️ Choose your Learning Island:", TOPICS)
-
-    # Session state for quiz
-    if "quiz" not in st.session_state:
-        st.session_state.quiz = []
-        st.session_state.q_index = 0
-        st.session_state.correct = 0
-        st.session_state.finished = False
-
-    if st.button("Start Quiz", type="primary"):
-        st.session_state.quiz = get_questions(topic, 10)
-        st.session_state.q_index = 0
-        st.session_state.correct = 0
-        st.session_state.finished = False
-
-    if st.session_state.quiz and not st.session_state.finished:
-        q = st.session_state.quiz[st.session_state.q_index]
-
-        st.subheader(f"Q{st.session_state.q_index+1}: {q['question']}")
-        
-        # Create options list from the CSV columns
-        options = [
-            q['option_a'],
-            q['option_b'], 
-            q['option_c'],
-            q['option_d']
-        ]
-        
-        choice = st.radio(
-            "Select your answer:",
-            options,
-            key=f"q_{st.session_state.q_index}"
-        )
-
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("⬅ Previous") and st.session_state.q_index > 0:
-                st.session_state.q_index -= 1
-                st.rerun()
-        with col2:
-            if st.button("Next ➡"):
-                # Determine correct answer
-                correct_letter = q['correct_answer'].upper()
-                correct_option_map = {
-                    'A': q['option_a'],
-                    'B': q['option_b'], 
-                    'C': q['option_c'],
-                    'D': q['option_d']
-                }
-                correct_answer = correct_option_map.get(correct_letter, q['option_a'])
-                
-                # Check if answer is correct
-                if choice == correct_answer:
-                    st.session_state.correct += 1
-                    st.success("✅ Correct!")
-                else:
-                    st.error(f"❌ Wrong! The correct answer was: {correct_answer}")
-
-                if st.session_state.q_index < len(st.session_state.quiz) - 1:
-                    st.session_state.q_index += 1
-                    st.rerun()
-                else:
-                    st.session_state.finished = True
-                    score = st.session_state.correct
-                    total_questions = len(st.session_state.quiz)
-                    xp = calculate_xp(score, total_questions)
-                    st.success(f"🎉 Quiz Complete! You scored {score}/{total_questions} and earned {xp} XP")
-
-                    # Log result
-                    log_score(student_id, student_name, topic, score, total_questions, score, q.get('difficulty', 'medium'), xp)
-                    st.rerun()
-
-    # ------------------------
-    # Analytics
-    # ------------------------
-    st.subheader("📊 Your Progress")
-    if os.path.exists(SCORES_CSV):
-        df = pd.read_csv(SCORES_CSV)
-        student_df = df[df['student_name'] == student_name]
-
-        if not student_df.empty:
-            # Pie chart of performance by topic
-            fig = px.pie(student_df, names="topic", values="score", title="Performance by Topic")
-            st.plotly_chart(fig)
-
-            # Weakness prediction using the trained model
-            avg_scores = []
-            for topic in TOPICS:
-                topic_scores = student_df[student_df['topic'] == topic]['score']
-                avg_score = topic_scores.mean() if len(topic_scores) > 0 else 70
-                avg_scores.append(avg_score)
-            
-            # Add dummy time spent (you could enhance this by tracking actual time)
-            avg_scores.append(15)  
-            
-            weak_topic_idx, weak_topic_name = predict_weakness(avg_scores)
-            st.warning(f"🤖 AI Suggests: Focus more on **{weak_topic_name}**")
-            
-            # Display confidence and feature importance if available
-            if hasattr(model, 'predict_proba'):
-                probabilities = model.predict_proba([avg_scores])[0]
-                confidence = max(probabilities) * 100
-                st.info(f"📊 Prediction confidence: {confidence:.1f}%")
-
-            # Line chart: Weekly progress (dummy data for demo)
-            student_df['timestamp'] = pd.to_datetime(student_df['timestamp'])
-            weekly = student_df.groupby(student_df['timestamp'].dt.isocalendar().week)['score'].mean().reset_index()
-            fig_line = px.line(weekly, x='week', y='score', title="Weekly Average Score")
-            st.plotly_chart(fig_line)
-
+def show_player_introduction():
+    """Show player name input with adventure story"""
+    if 'player_name' not in st.session_state:
+        st.session_state.player_name = ""
+    
+    st.markdown("""
+    <div class="story-text">
+        <h3>🌟 Welcome, brave adventurer! 🌟</h3>
+        <p>Deep in the heart of the Enchanted Learning Lands, five mystical realms await your discovery. 
+        Each realm holds ancient secrets of the English language, guarded by wise creatures and magical challenges.</p>
+        <p>Before you begin this grand adventure, please tell us your name, so the realm guardians may know you...</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    player_name = st.text_input(
+        "✨ What shall the realm guardians call you?",
+        value=st.session_state.player_name,
+        placeholder="Enter your adventurer name here..."
+    )
+    
+    if st.button("🚀 Begin My Adventure!", type="primary", use_container_width=True):
+        if player_name.strip():
+            st.session_state.player_name = player_name.strip()
+            st.rerun()
         else:
-            st.info("Take a quiz to start tracking your progress!")
+            st.warning("Please enter your name to begin the adventure!")
+    
+    if st.session_state.player_name:
+        st.markdown(f"""
+        <div class="story-text">
+            <h4>Welcome, {st.session_state.player_name}! �</h4>
+            <p><em>The ancient scrolls whisper your name across the realms...</em></p>
+            <p>Your reputation as a word-master has spread across the land, {st.session_state.player_name}! 
+            The five realm guardians eagerly await your arrival. Choose your first destination wisely, 
+            for each realm will test your knowledge and reward your wisdom with magical powers!</p>
+        </div>
+        """, unsafe_allow_html=True)
+        return True
+    return False
 
-    st.markdown("---")
-    st.caption("🌸 ManabiFun - Fun Learning for Kids | Track your progress and improve daily!")
-    st.caption("🔀 **Shuffling Algorithm**: Fisher-Yates shuffle ensures fair randomization of quiz questions")
-    st.caption("🤖 **AI Model**: Random Forest trained on student performance patterns for weakness detection")
+# ========================================
+# MAIN ADVENTURE INTERFACE  
+# ========================================
+
+def main():
+    """Main adventure application"""
+    show_adventure_title()
+    
+    # Initialize session state
+    if 'current_realm' not in st.session_state:
+        st.session_state.current_realm = None
+    
+    # Player introduction
+    if not show_player_introduction():
+        return
+    
+    # Show realm selection
+    show_realm_selection()
+
+def show_realm_selection():
+    """Display the five mystical realms for selection"""
+    st.markdown('<div class="ornament">⚡ ✨ 🌟 ✨ ⚡</div>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="chapter-heading">
+        🗺️ Choose Your Realm of Adventure
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
+    <div class="story-text">
+        Behold, {st.session_state.player_name}! The five mystical realms stretch before you, 
+        each offering unique challenges and ancient wisdom. The ML Oracle has been watching your journey 
+        and will guide you to strengthen any weak areas you encounter.
+        <br><br>
+        <strong>🎯 Your Mission:</strong> Master each realm by achieving 89% accuracy or higher! 
+        Only then will you unlock the title of "Language Master" and gain access to the ultimate treasure!
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Display realm cards
+    cols = st.columns(2)
+    
+    for idx, (realm_key, realm_info) in enumerate(ADVENTURE_REALMS.items()):
+        with cols[idx % 2]:
+            # Create realm card
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #f4f1e8, #e8dcc0);
+                border: 2px solid #cd853f;
+                border-radius: 15px;
+                padding: 1.5rem;
+                margin: 1rem 0;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(205, 133, 63, 0.2);
+                transition: transform 0.2s ease;
+            ">
+                <h3 style="color: #8b4513; margin-bottom: 1rem;">
+                    {realm_info['emoji']} {realm_info['name']}
+                </h3>
+                <p style="color: #2c1810; font-style: italic; margin-bottom: 1rem;">
+                    {realm_info['description']}
+                </p>
+                <div style="font-size: 0.9rem; color: #8b6f47;">
+                    <strong>Chapters Available:</strong><br>
+                    🌱 {realm_info['difficulty_chapters']['easy']}<br>
+                    🌿 {realm_info['difficulty_chapters']['medium']}<br>
+                    🌳 {realm_info['difficulty_chapters']['hard']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button(f"🚀 Enter {realm_info['name']}", 
+                        key=f"realm_{realm_key}", 
+                        use_container_width=True):
+                st.session_state.current_realm = realm_key
+                st.rerun()
+
+# Run the adventure!
+if __name__ == "__main__":
+    main()
+
