@@ -116,6 +116,7 @@ Each realm contains **three difficulty chapters**:
 │  [🌴 Synonyms Jungle]    [🗻 Antonyms Mountain]         │
 │   🎯 Available             🔒 Locked                    │
 │                                                         │
+```
 ---
 
 ##  **Technology Stack**
@@ -152,7 +153,6 @@ ManabiFun/
 ├── 🧠 models/
 │   ├── enhanced_weakness_detector.pkl  # ML model (88.4% accuracy)
 │   └── progress_predictor.pkl     # Learning predictor (92.8% accuracy)
-```
 │   └── student_scores.csv         # User progress tracking
 ├── 🧠 models/
 │   ├── weakness_detector.py       # Basic ML model utilities  
