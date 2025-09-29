@@ -1,4 +1,4 @@
-# � ManabiFun - English Learning Adventure
+#  ManabiFun - English Learning Adventure
 
 > **A Magical Journey Through the Five Realms of Language Learning**
 
@@ -62,11 +62,11 @@ Navigate to `http://localhost:8501` and start learning!
 
 ```
 ╔══════════════════════════════════════════════════════════╗
-║  � ManabiFun's English Adventure �                    ║
-║  A Magical Journey Through the Five Realms of Language  ║
+║  � ManabiFun's English Adventure                        ║
+║  A Magical Journey Through the Five Realms of Language   ║
 ║                                                          ║
-║  ✨ What shall the realm guardians call you?            ║
-║     [Your Name Here] 🚀 [Begin My Adventure!]           ║
+║  ✨ What shall the realm guardians call you?             ║
+║     [Your Name Here] 🚀 [Begin My Adventure!]            ║
 ╚══════════════════════════════════════════════════════════╝
 ```
 
@@ -74,12 +74,12 @@ Navigate to `http://localhost:8501` and start learning!
 
 ```
 ╔══════════════════════════════════════════════════════════╗
-║  Welcome, [Your Name]! Choose Your First Destiny...     ║
+║  Welcome, [Your Name]! Choose Your First Destiny...      ║
 ║                                                          ║
 ║  🌳 The Grammar Grove        🏝️ The Article Archipelago ║
-║  🌿 Ancient sentence secrets  🌊 Treasures of "a","the"   ║
+║  🌿 Ancient sentence secrets  🌊 Treasures of "a","the" ║
 ║                                                          ║
-║  ⛪ The Synonym Sanctuary    ⚔️ The Antonym Arena      ║
+║  ⛪ The Synonym Sanctuary    ⚔️ The Antonym Arena       ║
 ║  � Sacred word meanings    ⚔️ Where opposites clash     ║
 ║                                                          ║
 ║  🏰 The Sentence Stronghold                             ║
