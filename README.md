@@ -407,29 +407,6 @@ CUSTOM_TOPICS = {
 
 ---
 
-## 📚 **TOEFL Preparation Path**
-
-### **📈 Scaling to TOEFL Level**
-
-**Current Foundation:**
-- ✅ Basic English skills (Grammar, Articles, Vocabulary)
-- ✅ AI-powered weakness detection
-- ✅ Progressive difficulty system
-
-**TOEFL Enhancement Plan:**
-1. **Reading Comprehension** (30+ academic passages)
-2. **Listening Practice** (Audio-based questions)
-3. **Speaking Assessment** (Voice recognition)
-4. **Writing Evaluation** (Essay scoring)
-
-**Dataset Sources for TOEFL:**
-- ETS Official Practice Tests
-- Academic journal articles
-- University lecture transcripts
-- Standardized test prep materials
-
----
-
 ## 🛠️ **Development & Contribution**
 
 ### **🔧 Setup for Development**
@@ -480,37 +457,6 @@ from sklearn.model_selection import GridSearchCV
 - **Response Time**: <0.5 seconds per interaction
 - **Concurrent Users**: Supports 100+ simultaneous learners
 - **Data Storage**: Efficient CSV-based progress tracking
-
----
-
-## 🔐 **Privacy & Security**
-
-### **📊 Data Handling**
-- **Student Privacy**: Names only, no sensitive information
-- **Local Storage**: All data stored locally by default
-- **Progress Tracking**: Anonymized performance metrics
-- **GDPR Compliant**: Easy data export/deletion
-
-### **🔒 Security Features**
-- **No Authentication Required**: Simplified access
-- **Input Validation**: Prevents code injection
-- **Secure File Handling**: Protected file operations
-
----
-
-## 📞 **Support & Community**
-
-### **🆘 Getting Help**
-- **Documentation**: Comprehensive guides included
-- **Issue Tracker**: GitHub Issues for bug reports
-- **Community Forum**: Discord/Slack for discussions
-- **Email Support**: Direct developer contact
-
-### **🤝 Contributing**
-- **Bug Reports**: Submit detailed issue descriptions
-- **Feature Requests**: Suggest new functionality
-- **Code Contributions**: Follow pull request guidelines
-- **Translation**: Help localize for different languages
 
 ---
 
